@@ -18,17 +18,17 @@ sparse_joints = [0, 1, 2, 3, 4, 5, 7, 8, 9, 11, 13, 15, 17, 19, 20, 21, 23]
 hand_joints = [6, 7, 10, 11, 21, 22, 23, 24]
 # ankle and foot tip for left and right feet
 feet_joints = [14, 15, 18, 19]
-all_joints = upper_body_joints + lower_body_joints
-ntu_joint_configs = {"no_filter": None,
-                     "upper_body": upper_body_joints,
-                     "lower_body": lower_body_joints,
-                     "hand": hand_joints,
-                     "feet": feet_joints}
+all_joints = upper_body_joints+lower_body_joints
+ntu_joint_configs = {"no_filter":None,
+                    "upper_body":upper_body_joints,
+                    "lower_body":lower_body_joints,
+                    "hand":hand_joints,
+                    "feet":feet_joints}
 ntu_links = [(1, 2), (2, 21), (3, 21), (4, 3), (5, 21), (6, 5),
-             (7, 6), (8, 7), (9, 21), (10, 9), (11, 10), (12, 11),
-             (13, 1), (14, 13), (15, 14), (16, 15), (17, 1), (18, 17),
-             (19, 18), (20, 19), (22, 23), (21, 21), (23, 8), (24, 25), (25, 12)]
-ntu_links = [(i - 1, j - 1) for (i, j) in ntu_links]
+    (7, 6), (8, 7), (9, 21), (10, 9), (11, 10), (12, 11),
+    (13, 1), (14, 13), (15, 14), (16, 15), (17, 1), (18, 17),
+    (19, 18), (20, 19), (22, 23), (21, 21), (23, 8), (24, 25),(25, 12)]
+ntu_links = [(i-1, j-1) for (i, j) in ntu_links]
 
 
 def read_pkl(fp):
@@ -49,43 +49,59 @@ def filter_by_arr(kps, arr):
     return kps_f
 
 
-def get_all_angles(frame):
+def get_all_angles(frame, upper_triangle=True):
     """
     get the angles between one vertex and all other vertices
     :param frame: a tensor of shape (num_vertices, num_coords)
     :return: a tensor of shape (num_vertices, num_vertices) where entry (i,j)
-    is the angle between vertex i and j
+    is the angle between vertex i and j. If upper triangle is true, only
+    get the entries above the main diagonal, flattened
     """
     num_vertices, num_coords = frame.shape
     norms = np.linalg.norm(frame, axis=-1)
     norms[norms == 0.0] = 0.00001
     norms = np.expand_dims(norms, axis=-1)
     norms = np.tile(norms, (1, num_coords))
-    frame_n = frame / norms
+    frame_n = frame/norms
     A = np.expand_dims(frame_n, axis=1)
     A = np.tile(A, (1, num_vertices, 1))
     B = np.tile(np.expand_dims(frame_n, axis=0), (num_vertices, 1, 1))
-    C = A * B
+    C = np.multiply(A, B)
     dps = np.sum(C, axis=-1)
-    dps = np.clip(dps, a_min=-1.0, a_max=1.0)
-    angles = np.arccos(dps)
+    angles = np.clip(dps, a_max=1.0, a_min=-1.0)
+    angles = np.arccos(angles)
     angles[angles == np.nan] = 0.0
-    return angles
+    angs = []
+    if upper_triangle:
+        for i in range(num_vertices):
+            for j in range(i, num_vertices):
+                if i != j:
+                    angs.append(angles[i][j])
+    angs = np.array(angs)
+    return angs
 
 
 def get_angle_motion(frames, order=1):
     num_frames, num_vertices, num_channels = frames.shape
     angles_per_frame = np.zeros((num_frames, num_vertices, num_vertices))
-    for fn in range(num_frames):
-        angles_per_frame[fn] = get_all_angles(frames[fn])
+    for i, fn in enumerate(range(num_frames)):
+        if i == 0:
+            angles = get_all_angles(frames[fn])
+            angles_shape = angles.shape[0]
+            angles_per_frame = np.zeros((num_frames, angles_shape))
+            angles_per_frame[i] = angles
+        else:
+            angles = get_all_angles(frames[fn])
+            angles_per_frame[i] = angles
     for t in range(order):
         if t == 0:
-            angles_motion = np.abs(angles_per_frame[1:, :, :] - angles_per_frame[:-1, :, :])
+            angles_motion = np.abs(angles_per_frame[1:, :] - angles_per_frame[:-1, :])
         else:
-            angles_motion = np.abs(angles_motion[1:, :, :] - angles_motion[:-1, :, :])
+            angles_motion = np.abs(angles_motion[1:, :] - angles_motion[:-1, :])
     angles_motion = np.sum(angles_motion, axis=0)
-    angles_motion = angles_motion.reshape(-1)
+    angles_motion = angles_motion/num_frames
     return angles_motion
+
 
 
 def get_motion_features_dim(kps, dim, order=1):
@@ -103,7 +119,7 @@ def get_motion_features_dim(kps, dim, order=1):
             motion_vec = np.abs(kps_i[1:, :] - kps_i[:-1, :])
         else:
             motion_vec = np.abs(motion_vec[1:, :] - motion_vec[:-1, :])
-    motion = np.sum(motion_vec.reshape(-1)) / n_frames
+    motion = np.sum(motion_vec.reshape(-1))/n_frames
     return motion
 
 
@@ -121,7 +137,7 @@ def get_motion_features_vertices(kps, dim, order=1):
             motion_vec = np.abs(kps_i[1:, :] - kps_i[:-1, :])
         else:
             motion_vec = np.abs(motion_vec[1:, :] - motion_vec[:-1, :])
-    motion = np.sum(motion_vec, axis=0) / n_frames
+    motion = np.sum(motion_vec, axis=0)/n_frames
     return motion
 
 
@@ -139,8 +155,9 @@ def get_link_vals(kps):
 def center_data(kps, center_val=1):
     center_joint = np.expand_dims(np.expand_dims(np.expand_dims(kps[0, 0, center_val, :], axis=0), axis=0), axis=0)
     center_joint = np.tile(center_joint, reps=[kps.shape[0], kps.shape[1], kps.shape[2], 1])
-    kps_ = kps - center_joint
+    kps_ = kps-center_joint
     return kps_
+
 
 
 def gen_kp_features_ntu(kps_):
@@ -177,9 +194,9 @@ def strip_zeros(str):
 
 def get_action_class(inner_fp):
     start_val = inner_fp.find("A")
-    action_class_str = inner_fp[start_val + 1:start_val + 4]
+    action_class_str = inner_fp[start_val+1:start_val+4]
     action_class = strip_zeros(action_class_str)
-    action_class = action_class - 1  # ntu classes are 1 indexed
+    action_class = action_class-1 # ntu classes are 1 indexed
     return action_class
 
 
@@ -215,7 +232,7 @@ def gen_features_ntu(save_fp, with_pca=True):
 
     feat_d_2p_keys = list(feat_d_2p.keys())
     num_features = feat_d_2p[feat_d_2p_keys[0]][0].shape[0]
-    feats_2p = np.zeros((len(feat_d_2p_keys), num_features * 2))
+    feats_2p = np.zeros((len(feat_d_2p_keys), num_features*2))
     for i, key in enumerate(feat_d_2p_keys):
         feats_2p[i, 0:num_features] = feat_d_2p[key][0]
         feats_2p[i, num_features:] = feat_d_2p[key][1]
@@ -229,13 +246,13 @@ def gen_features_ntu(save_fp, with_pca=True):
 
     if with_pca:
         print("Writing the features .pkl file")
-        save_fp = save_fp + "_with_pca"
+        save_fp = save_fp+"_with_pca"
         save_fp += ".pkl"
         with open(save_fp, "wb") as f:
             pickle.dump(feat_d, f)
     else:
         print("Writing the .npz file")
-        save_fp += ".npz"  # more features saved with npz
+        save_fp += ".npz" # more features saved with npz
         np.savez(save_fp, one_p=feats_1p, two_p=feats_2p, one_p_keys=feat_d_1p_keys, two_p_keys=feat_d_2p_keys)
 
 
