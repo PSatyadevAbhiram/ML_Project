@@ -127,3 +127,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Rproject files
+.Rproj.user
+*.Rproj
+
+# Don't sync any data files
+data/
