@@ -1,0 +1,3 @@
+# Proper language detection
+*.qmd linguist-detectable linguist-language=RMarkdown
+/R/*.html linguist-vendored
