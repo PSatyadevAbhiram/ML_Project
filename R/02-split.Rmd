@@ -68,3 +68,20 @@ skl_action_folds
 
 Since we initially did a 90/10 split, and the 90 has been split 80/20, this is approximately a
 72/18/10 split.
+
+## Alternative: 1 fold
+
+```{r}
+set.seed(99)
+
+skl_action_one_fold <- skl_action_isplit %>%
+  training() %>%
+  validation_split(prop = 8/10)
+```
+
+```{r, eval=FALSE}
+qsave(skl_action_one_fold, "./data/skl_action_one_fold.qs", nthreads=mt)
+```
+
+Once again, since we initially did a 90/10 split, and the 90 has been split 80/20, this is
+approximately a 72/18/10 split.

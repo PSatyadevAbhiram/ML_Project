@@ -484,6 +484,17 @@ display: none;
 <p>Since we initially did a 90/10 split, and the 90 has been split
 80/20, this is approximately a 72/18/10 split.</p>
 </div>
+<div id="alternative-1-fold" class="section level2">
+<h2>Alternative: 1 fold</h2>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">99</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>skl_action_one_fold <span class="ot">&lt;-</span> skl_action_isplit <span class="sc">%&gt;%</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">training</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">validation_split</span>(<span class="at">prop =</span> <span class="dv">8</span><span class="sc">/</span><span class="dv">10</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">qsave</span>(skl_action_one_fold, <span class="st">&quot;./data/skl_action_one_fold.qs&quot;</span>, <span class="at">nthreads=</span>mt)</span></code></pre></div>
+<p>Once again, since we initially did a 90/10 split, and the 90 has been
+split 80/20, this is approximately a 72/18/10 split.</p>
+</div>
 </div>
 
 
