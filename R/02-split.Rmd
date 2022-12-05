@@ -1,0 +1,87 @@
+---
+title: "Split"
+output:
+  html_document:
+    theme: cosmo
+    highlight: "../adam_one_light.theme"
+---
+
+```{r, include=FALSE}
+# Note: knit directory should be set to project directory
+knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE)
+
+old_hooks <- fansi::set_knit_hooks(
+  knitr::knit_hooks,
+  which = c("output", "message", "warning", "error")
+)
+
+options(crayon.enabled=TRUE)
+```
+
+# Packages
+
+```{r}
+library(tidyverse)
+library(rsample)
+library(qs)
+
+mt <- parallel::detectCores()/2
+```
+
+# Main data
+
+```{r}
+skl_action <- qread("./data/skl_action.qs", nthreads=mt)
+```
+
+# Create initial 90/10 split
+
+```{r}
+set.seed(20)
+
+skl_action_isplit <- initial_split(skl_action, prop=9/10)
+```
+
+```{r, eval=FALSE}
+skl_action_isplit %>%
+  testing() %>%
+  qsave("./data/skl_action_test.qs", nthreads=mt)
+```
+
+## Perform 5-fold cross validation
+
+```{r}
+set.seed(99)
+
+skl_action_folds <- skl_action_isplit %>%
+  analysis() %>%
+  vfold_cv(v=5)
+```
+
+```{r, eval=FALSE}
+qsave(skl_action_folds, "./data/skl_action_folds.qs", nthreads=mt)
+```
+
+```{r}
+skl_action_folds
+```
+
+Since we initially did a 90/10 split, and the 90 has been split 80/20, this is approximately a
+72/18/10 split.
+
+## Alternative: 1 fold
+
+```{r}
+set.seed(99)
+
+skl_action_one_fold <- skl_action_isplit %>%
+  training() %>%
+  validation_split(prop = 8/10)
+```
+
+```{r, eval=FALSE}
+qsave(skl_action_one_fold, "./data/skl_action_one_fold.qs", nthreads=mt)
+```
+
+Once again, since we initially did a 90/10 split, and the 90 has been split 80/20, this is
+approximately a 72/18/10 split.

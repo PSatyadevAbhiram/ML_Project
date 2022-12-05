@@ -1,7 +1,6 @@
 # ML_Project
 
-# You wil need to download the pkl from 
-# https://github.com/kennymckormick/pyskl/blob/main/tools/data/data_doc.md?fbclid=IwAR2zZlhPAbGdXd9859fA2FV_razbGp67FX62GZdn6mGVtqYBccecVHaUkLA
+You wil need to download the pkl from https://github.com/kennymckormick/pyskl/blob/main/tools/data/data_doc.md?fbclid=IwAR2zZlhPAbGdXd9859fA2FV_razbGp67FX62GZdn6mGVtqYBccecVHaUkLA
 
 Once you visit the page from the link above, please download NTURGB+D 120 .pkl file and place it in your cwd. Run gen_ml_features.py file 
 to generate all the features. This might take a while.

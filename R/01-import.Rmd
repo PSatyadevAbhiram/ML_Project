@@ -1,0 +1,95 @@
+---
+title: "Import"
+output:
+  html_document:
+    theme: cosmo
+    highlight: "../adam_one_light.theme"
+---
+
+```{r, include=FALSE}
+# Note: knit directory should be set to project directory
+knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE)
+
+old_hooks <- fansi::set_knit_hooks(
+  knitr::knit_hooks,
+  which = c("output", "message", "warning", "error")
+)
+
+options(crayon.enabled=TRUE)
+```
+
+# Packages
+
+```{r}
+library(reticulate)
+library(tidyverse)
+library(qs)
+
+mt <- parallel::detectCores()/2
+```
+
+# Main data
+
+```{r}
+skl_features <- py_load_object("./data/ntu120_ml_feats_with_pca.pkl")
+```
+
+## Create demo
+
+```{r, eval=FALSE}
+demo <- skl_features[1:3]
+```
+
+```{r, eval=FALSE, include=FALSE}
+write_rds(demo, "./data/demo.rds")
+```
+
+```{r, include=FALSE}
+demo <- read_rds("./data/demo.rds")
+```
+
+## Reshape into rectangular format
+
+```{r}
+demo %>%
+  bind_rows(.id = "obs_id") %>%
+  group_by(obs_id) %>%
+  mutate(
+    class = as_factor(class),
+    feature = 1:n()
+  ) %>%
+  ungroup() %>%
+  pivot_wider(
+    id_cols = obs_id,
+    names_from = feature,
+    names_prefix = "feature_",
+    values_from = features,
+    unused_fn = unique
+  ) %>%
+  select(obs_id, class, feature_1, feature_2, feature_3)
+```
+
+# Apply to main data
+
+```{r}
+skl_action <- skl_features %>%
+  bind_rows(.id = "obs_id") %>%
+  group_by(obs_id) %>%
+  mutate(
+    class = as_factor(class),
+    feature = 1:n()
+  ) %>%
+  ungroup() %>%
+  pivot_wider(
+    id_cols = obs_id,
+    names_from = feature,
+    names_prefix = "feature_",
+    values_from = features,
+    unused_fn = unique
+  ) %>%
+  select(obs_id, class, starts_with("feature"))
+```
+
+```{r, eval=FALSE}
+qsave(skl_action, "./data/skl_action.qs", nthreads=mt)
+```
