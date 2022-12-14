@@ -51,43 +51,39 @@ demo <- read_rds("./data/demo.rds")
 ## Reshape into rectangular format
 
 ```{r}
+list_to_tibble <- function(x, .id) {
+  x %>%
+    as_tibble() %>%
+    t() %>%
+    magrittr::set_colnames(glue::glue("feature{1:ncol(.)}")) %>%
+    as_tibble(rownames = .id)
+}
+```
+
+```{r}
 demo %>%
-  bind_rows(.id = "obs_id") %>%
-  group_by(obs_id) %>%
+  list_to_tibble(.id = "obs_id") %>%
   mutate(
-    class = as_factor(class),
-    feature = 1:n()
+    class = str_extract(obs_id, ".{3}$"),
+    class = as.integer(class),
+    class = class - 1L,
+    class = as_factor(class)
   ) %>%
-  ungroup() %>%
-  pivot_wider(
-    id_cols = obs_id,
-    names_from = feature,
-    names_prefix = "feature_",
-    values_from = features,
-    unused_fn = unique
-  ) %>%
-  select(obs_id, class, feature_1, feature_2, feature_3)
+  select(obs_id, class, everything())
 ```
 
 # Apply to main data
 
 ```{r}
 skl_action <- skl_features %>%
-  bind_rows(.id = "obs_id") %>%
-  group_by(obs_id) %>%
+  list_to_tibble(.id = "obs_id") %>%
   mutate(
-    class = as_factor(class),
-    feature = 1:n()
+    class = str_extract(obs_id, ".{3}$"),
+    class = as.integer(class),
+    class = class - 1L,
+    class = as_factor(class)
   ) %>%
-  ungroup() %>%
-  pivot_wider(
-    id_cols = obs_id,
-    names_from = feature,
-    names_prefix = "feature_",
-    values_from = features,
-    unused_fn = unique
-  ) %>%
-  select(obs_id, class, starts_with("feature"))
+  select(obs_id, class, everything())
 ```
 
 ```{r, eval=FALSE}
