@@ -462,39 +462,30 @@ display: none;
 <div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>skl_action_isplit <span class="sc">%&gt;%</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">testing</span>() <span class="sc">%&gt;%</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">qsave</span>(<span class="st">&quot;./data/skl_action_test.qs&quot;</span>, <span class="at">nthreads=</span>mt)</span></code></pre></div>
-<div id="perform-5-fold-cross-validation" class="section level2">
-<h2>Perform 5-fold cross validation</h2>
+</div>
+<div id="fold" class="section level1">
+<h1>1 fold</h1>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">99</span>)</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>skl_action_folds <span class="ot">&lt;-</span> skl_action_isplit <span class="sc">%&gt;%</span></span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">analysis</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">vfold_cv</span>(<span class="at">v=</span><span class="dv">5</span>)</span></code></pre></div>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">qsave</span>(skl_action_folds, <span class="st">&quot;./data/skl_action_folds.qs&quot;</span>, <span class="at">nthreads=</span>mt)</span></code></pre></div>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>skl_action_folds</span></code></pre></div>
-<PRE class="fansi fansi-output"><CODE>## #  5-fold cross-validation 
-## <span style="color: #555555;"># A tibble: 5 x 2</span>
-##   splits                id   
-##   <span style="color: #555555; font-style: italic;">&lt;list&gt;</span>                <span style="color: #555555; font-style: italic;">&lt;chr&gt;</span>
-## <span style="color: #555555;">1</span> <span style="color: #555555;">&lt;split [82040/20510]&gt;</span> Fold1
-## <span style="color: #555555;">2</span> <span style="color: #555555;">&lt;split [82040/20510]&gt;</span> Fold2
-## <span style="color: #555555;">3</span> <span style="color: #555555;">&lt;split [82040/20510]&gt;</span> Fold3
-## <span style="color: #555555;">4</span> <span style="color: #555555;">&lt;split [82040/20510]&gt;</span> Fold4
-## <span style="color: #555555;">5</span> <span style="color: #555555;">&lt;split [82040/20510]&gt;</span> Fold5
-</CODE></PRE>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>skl_action_one_fold <span class="ot">&lt;-</span> skl_action_isplit <span class="sc">%&gt;%</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">training</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">validation_split</span>(<span class="at">prop =</span> <span class="dv">8</span><span class="sc">/</span><span class="dv">10</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">qsave</span>(skl_action_one_fold, <span class="st">&quot;./data/skl_action_one_fold.qs&quot;</span>, <span class="at">nthreads=</span>mt)</span></code></pre></div>
 <p>Since we initially did a 90/10 split, and the 90 has been split
 80/20, this is approximately a 72/18/10 split.</p>
 </div>
-<div id="alternative-1-fold" class="section level2">
-<h2>Alternative: 1 fold</h2>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">99</span>)</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>skl_action_one_fold <span class="ot">&lt;-</span> skl_action_isplit <span class="sc">%&gt;%</span></span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">training</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">validation_split</span>(<span class="at">prop =</span> <span class="dv">8</span><span class="sc">/</span><span class="dv">10</span>)</span></code></pre></div>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">qsave</span>(skl_action_one_fold, <span class="st">&quot;./data/skl_action_one_fold.qs&quot;</span>, <span class="at">nthreads=</span>mt)</span></code></pre></div>
-<p>Once again, since we initially did a 90/10 split, and the 90 has been
-split 80/20, this is approximately a 72/18/10 split.</p>
-</div>
+<div id="summary" class="section level1">
+<h1>Summary</h1>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>skl_action_isplit</span></code></pre></div>
+<pre><code>## &lt;Training/Testing/Total&gt;
+## &lt;50920/5658/56578&gt;</code></pre>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>skl_action_one_fold</span></code></pre></div>
+<PRE class="fansi fansi-output"><CODE>## # Validation Set Split (0.8/0.2)  
+## <span style="color: #555555;"># A tibble: 1 x 2</span>
+##   splits                id        
+##   <span style="color: #555555; font-style: italic;">&lt;list&gt;</span>                <span style="color: #555555; font-style: italic;">&lt;chr&gt;</span>     
+## <span style="color: #555555;">1</span> <span style="color: #555555;">&lt;split [40736/10184]&gt;</span> validation
+</CODE></PRE>
 </div>
 
 

@@ -48,28 +48,7 @@ skl_action_isplit %>%
   qsave("./data/skl_action_test.qs", nthreads=mt)
 ```
 
-## Perform 5-fold cross validation
-
-```{r}
-set.seed(99)
-
-skl_action_folds <- skl_action_isplit %>%
-  analysis() %>%
-  vfold_cv(v=5)
-```
-
-```{r, eval=FALSE}
-qsave(skl_action_folds, "./data/skl_action_folds.qs", nthreads=mt)
-```
-
-```{r}
-skl_action_folds
-```
-
-Since we initially did a 90/10 split, and the 90 has been split 80/20, this is approximately a
-72/18/10 split.
-
-## Alternative: 1 fold
+# 1 fold
 
 ```{r}
 set.seed(99)
@@ -83,5 +62,13 @@ skl_action_one_fold <- skl_action_isplit %>%
 qsave(skl_action_one_fold, "./data/skl_action_one_fold.qs", nthreads=mt)
 ```
 
-Once again, since we initially did a 90/10 split, and the 90 has been split 80/20, this is
-approximately a 72/18/10 split.
+Since we initially did a 90/10 split, and the 90 has been split 80/20, this is approximately a
+72/18/10 split.
+
+# Summary
+
+```{r}
+skl_action_isplit
+skl_action_one_fold
+```
+
