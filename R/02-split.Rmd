@@ -72,3 +72,31 @@ skl_action_isplit
 skl_action_one_fold
 ```
 
+# Data previews
+
+## Training data
+
+```{r}
+skl_action_one_fold %>%
+  pluck("splits", 1) %>%
+  training() %>%
+  select(obs_id, class, feature1:feature5)
+```
+
+## Validation data
+
+```{r}
+skl_action_one_fold %>%
+  pluck("splits", 1) %>%
+  assessment() %>%
+  select(obs_id, class, feature1:feature5)
+```
+
+## Testing data
+
+```{r}
+skl_action_isplit %>%
+  testing() %>%
+  select(obs_id, class, feature1:feature5)
+```
+
