@@ -487,6 +487,74 @@ display: none;
 ## <span style="color: #555555;">1</span> <span style="color: #555555;">&lt;split [40736/10184]&gt;</span> validation
 </CODE></PRE>
 </div>
+<div id="data-previews" class="section level1">
+<h1>Data previews</h1>
+<div id="training-data" class="section level2">
+<h2>Training data</h2>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>skl_action_one_fold <span class="sc">%&gt;%</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pluck</span>(<span class="st">&quot;splits&quot;</span>, <span class="dv">1</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">training</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(obs_id, class, feature1<span class="sc">:</span>feature5)</span></code></pre></div>
+<PRE class="fansi fansi-output"><CODE>## <span style="color: #555555;"># A tibble: 40,736 x 7</span>
+##    obs_id               class feature1 feature2 feature3 feature4 feature5
+##    <span style="color: #555555; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #555555; font-style: italic;">&lt;fct&gt;</span>    <span style="color: #555555; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #555555; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #555555; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #555555; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #555555; font-style: italic;">&lt;dbl&gt;</span>
+## <span style="color: #555555;"> 1</span> S014C003P007R001A033 32     -<span style="color: #BB0000;">9.70</span>    -<span style="color: #BB0000;">9.70</span>     -<span style="color: #BB0000;">3.78</span>     3.59      1.09
+## <span style="color: #555555;"> 2</span> S009C001P019R002A023 22     -<span style="color: #BB0000;">8.69</span>    -<span style="color: #BB0000;">7.21</span>     -<span style="color: #BB0000;">0.361</span>    0.726    -<span style="color: #BB0000;">7.05</span>
+## <span style="color: #555555;"> 3</span> S002C003P003R001A006 5      -<span style="color: #BB0000;">0.067</span><span style="color: #BB0000; text-decoration: underline;">7</span>  24.3       0.771   -<span style="color: #BB0000;">4.08</span>      2.93
+## <span style="color: #555555;"> 4</span> S004C003P003R001A007 6      -<span style="color: #BB0000;">6.41</span>     1.28     -<span style="color: #BB0000;">5.31</span>     3.02     -<span style="color: #BB0000;">4.88</span>
+## <span style="color: #555555;"> 5</span> S013C001P037R001A023 22     -<span style="color: #BB0000;">6.90</span>     0.050<span style="text-decoration: underline;">6</span>   -<span style="color: #BB0000;">3.77</span>     1.89    -<span style="color: #BB0000;">10.3</span> 
+## <span style="color: #555555;"> 6</span> S005C001P017R001A046 45     -<span style="color: #BB0000;">8.63</span>    -<span style="color: #BB0000;">7.03</span>      0.803    3.21      1.42
+## <span style="color: #555555;"> 7</span> S017C003P003R002A015 14     -<span style="color: #BB0000;">5.77</span>     3.47     -<span style="color: #BB0000;">1.68</span>     0.967     4.63
+## <span style="color: #555555;"> 8</span> S010C003P018R001A051 50     17.2     -<span style="color: #BB0000;">1.51</span>      1.06    -<span style="color: #BB0000;">2.23</span>      8.93
+## <span style="color: #555555;"> 9</span> S014C002P027R002A042 41     -<span style="color: #BB0000;">4.67</span>     6.12      9.25    -<span style="color: #BB0000;">3.02</span>      1.64
+## <span style="color: #555555;">10</span> S010C001P021R001A007 6      -<span style="color: #BB0000;">2.65</span>    15.1     -<span style="color: #BB0000;">15.8</span>     -<span style="color: #BB0000;">3.70</span>      3.89
+## <span style="color: #555555;"># ... with 40,726 more rows</span>
+</CODE></PRE>
+</div>
+<div id="validation-data" class="section level2">
+<h2>Validation data</h2>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>skl_action_one_fold <span class="sc">%&gt;%</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pluck</span>(<span class="st">&quot;splits&quot;</span>, <span class="dv">1</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">assessment</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(obs_id, class, feature1<span class="sc">:</span>feature5)</span></code></pre></div>
+<PRE class="fansi fansi-output"><CODE>## <span style="color: #555555;"># A tibble: 10,184 x 7</span>
+##    obs_id               class feature1 feature2 feature3 feature4 feature5
+##    <span style="color: #555555; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #555555; font-style: italic;">&lt;fct&gt;</span>    <span style="color: #555555; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #555555; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #555555; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #555555; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #555555; font-style: italic;">&lt;dbl&gt;</span>
+## <span style="color: #555555;"> 1</span> S002C002P011R002A025 24      -<span style="color: #BB0000;">10.4</span>   -<span style="color: #BB0000;">13.5</span>       3.16    2.12    -<span style="color: #BB0000;">0.699</span>
+## <span style="color: #555555;"> 2</span> S015C001P015R002A030 29       -<span style="color: #BB0000;">3.06</span>   14.0       1.71   -<span style="color: #BB0000;">2.53</span>    -<span style="color: #BB0000;">1.78</span> 
+## <span style="color: #555555;"> 3</span> S003C001P019R002A024 23       -<span style="color: #BB0000;">8.40</span>   -<span style="color: #BB0000;">7.38</span>      8.19   -<span style="color: #BB0000;">0.592</span>    0.626
+## <span style="color: #555555;"> 4</span> S001C003P005R002A051 50        8.98   10.7      -<span style="color: #BB0000;">8.17</span>   -<span style="color: #BB0000;">1.62</span>     1.40 
+## <span style="color: #555555;"> 5</span> S010C002P015R001A049 48       -<span style="color: #BB0000;">3.28</span>   14.0     -<span style="color: #BB0000;">13.4</span>     0.250    8.55 
+## <span style="color: #555555;"> 6</span> S001C002P005R001A019 18       -<span style="color: #BB0000;">7.53</span>   -<span style="color: #BB0000;">2.08</span>     -<span style="color: #BB0000;">4.39</span>   -<span style="color: #BB0000;">0.157</span>   -<span style="color: #BB0000;">1.07</span> 
+## <span style="color: #555555;"> 7</span> S003C001P018R002A059 58       -<span style="color: #BB0000;">6.14</span>    0.245     2.03   -<span style="color: #BB0000;">2.91</span>    -<span style="color: #BB0000;">1.81</span> 
+## <span style="color: #555555;"> 8</span> S001C003P006R002A026 25       -<span style="color: #BB0000;">6.22</span>    0.788     2.21   -<span style="color: #BB0000;">0.609</span>    2.31 
+## <span style="color: #555555;"> 9</span> S012C001P015R002A039 38       -<span style="color: #BB0000;">8.49</span>   -<span style="color: #BB0000;">5.14</span>     -<span style="color: #BB0000;">4.13</span>    2.00     1.44 
+## <span style="color: #555555;">10</span> S008C003P019R001A036 35      -<span style="color: #BB0000;">10.4</span>   -<span style="color: #BB0000;">13.8</span>       6.20    0.537   -<span style="color: #BB0000;">0.694</span>
+## <span style="color: #555555;"># ... with 10,174 more rows</span>
+</CODE></PRE>
+</div>
+<div id="testing-data" class="section level2">
+<h2>Testing data</h2>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>skl_action_isplit <span class="sc">%&gt;%</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">testing</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(obs_id, class, feature1<span class="sc">:</span>feature5)</span></code></pre></div>
+<PRE class="fansi fansi-output"><CODE>## <span style="color: #555555;"># A tibble: 5,658 x 7</span>
+##    obs_id               class feature1 feature2 feature3 feature4 feature5
+##    <span style="color: #555555; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #555555; font-style: italic;">&lt;fct&gt;</span>    <span style="color: #555555; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #555555; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #555555; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #555555; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #555555; font-style: italic;">&lt;dbl&gt;</span>
+## <span style="color: #555555;"> 1</span> S001C001P001R001A004 3        -<span style="color: #BB0000;">7.36</span>   -<span style="color: #BB0000;">1.34</span>    -<span style="color: #BB0000;">3.90</span>    1.87     0.282 
+## <span style="color: #555555;"> 2</span> S001C001P001R001A007 6        -<span style="color: #BB0000;">4.95</span>    6.42    -<span style="color: #BB0000;">2.33</span>    0.348   -<span style="color: #BB0000;">2.71</span>  
+## <span style="color: #555555;"> 3</span> S001C001P001R001A021 20       -<span style="color: #BB0000;">6.75</span>    0.865   -<span style="color: #BB0000;">2.54</span>    2.52    -<span style="color: #BB0000;">0.839</span> 
+## <span style="color: #555555;"> 4</span> S001C001P001R001A023 22       -<span style="color: #BB0000;">7.80</span>   -<span style="color: #BB0000;">2.78</span>    -<span style="color: #BB0000;">3.93</span>    3.08    -<span style="color: #BB0000;">0.672</span> 
+## <span style="color: #555555;"> 5</span> S001C001P001R001A059 58       29.4     1.17     1.05   -<span style="color: #BB0000;">1.56</span>     3.38  
+## <span style="color: #555555;"> 6</span> S001C001P001R002A009 8        -<span style="color: #BB0000;">6.49</span>    1.16     0.614   0.662   -<span style="color: #BB0000;">0.060</span><span style="color: #BB0000; text-decoration: underline;">8</span>
+## <span style="color: #555555;"> 7</span> S001C001P001R002A013 12       -<span style="color: #BB0000;">6.76</span>    0.684   -<span style="color: #BB0000;">7.74</span>   -<span style="color: #BB0000;">0.110</span>   -<span style="color: #BB0000;">0.804</span> 
+## <span style="color: #555555;"> 8</span> S001C001P001R002A023 22       -<span style="color: #BB0000;">8.39</span>   -<span style="color: #BB0000;">5.51</span>    -<span style="color: #BB0000;">2.24</span>    0.821   -<span style="color: #BB0000;">8.55</span>  
+## <span style="color: #555555;"> 9</span> S001C001P001R002A034 33       -<span style="color: #BB0000;">9.06</span>   -<span style="color: #BB0000;">7.35</span>    -<span style="color: #BB0000;">4.31</span>    3.11     0.784 
+## <span style="color: #555555;">10</span> S001C001P001R002A038 37       -<span style="color: #BB0000;">8.38</span>   -<span style="color: #BB0000;">5.49</span>     0.971  -<span style="color: #BB0000;">0.071</span><span style="color: #BB0000; text-decoration: underline;">2</span>   3.24  
+## <span style="color: #555555;"># ... with 5,648 more rows</span>
+</CODE></PRE>
+</div>
+</div>
 
 
 
