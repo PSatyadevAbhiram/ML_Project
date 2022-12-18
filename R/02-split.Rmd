@@ -44,6 +44,10 @@ skl_action_isplit <- initial_split(skl_action, prop=9/10)
 
 ```{r, eval=FALSE}
 skl_action_isplit %>%
+  training() %>%
+  qsave("./data/skl_action_train.qs", nthreads=mt)
+
+skl_action_isplit %>%
   testing() %>%
   qsave("./data/skl_action_test.qs", nthreads=mt)
 ```
