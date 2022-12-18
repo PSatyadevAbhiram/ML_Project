@@ -11,7 +11,7 @@
 
 
 
-<title>Import</title>
+<title>Stacking demo</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -437,69 +437,192 @@ display: none;
 
 
 
-<h1 class="title toc-ignore">Import</h1>
+<h1 class="title toc-ignore">Stacking demo</h1>
 
 </div>
 
 
 <div id="packages" class="section level1">
 <h1>Packages</h1>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(reticulate)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(qs)</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>mt <span class="ot">&lt;-</span> parallel<span class="sc">::</span><span class="fu">detectCores</span>()<span class="sc">/</span><span class="dv">2</span></span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(stacks)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(qs)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>mt <span class="ot">&lt;-</span> parallel<span class="sc">::</span><span class="fu">detectCores</span>()<span class="sc">/</span><span class="dv">2</span></span></code></pre></div>
 </div>
 <div id="main-data" class="section level1">
 <h1>Main data</h1>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>skl_features <span class="ot">&lt;-</span> <span class="fu">py_load_object</span>(<span class="st">&quot;./data/ntu120_ml_feats_with_pca.pkl&quot;</span>)</span></code></pre></div>
-<div id="create-demo" class="section level2">
-<h2>Create demo</h2>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>demo <span class="ot">&lt;-</span> skl_features[<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>]</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>skl_action_one_fold <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="st">&quot;./data/skl_action_one_fold.qs&quot;</span>, <span class="at">nthreads=</span>mt)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>skl_action_train <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="st">&quot;./data/skl_action_train.qs&quot;</span>, <span class="at">nthreads=</span>mt)</span></code></pre></div>
 </div>
-<div id="reshape-into-rectangular-format" class="section level2">
-<h2>Reshape into rectangular format</h2>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>list_to_tibble <span class="ot">&lt;-</span> <span class="cf">function</span>(x, .id) {</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  x <span class="sc">%&gt;%</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">t</span>() <span class="sc">%&gt;%</span></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    magrittr<span class="sc">::</span><span class="fu">set_colnames</span>(glue<span class="sc">::</span><span class="fu">glue</span>(<span class="st">&quot;feature{1:ncol(.)}&quot;</span>)) <span class="sc">%&gt;%</span></span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">as_tibble</span>(<span class="at">rownames =</span> .id)</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>demo <span class="sc">%&gt;%</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list_to_tibble</span>(<span class="at">.id =</span> <span class="st">&quot;obs_id&quot;</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">class =</span> <span class="fu">str_extract</span>(obs_id, <span class="st">&quot;.{3}$&quot;</span>),</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">class =</span> <span class="fu">as.integer</span>(class),</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">class =</span> <span class="fu">as_factor</span>(class)</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(obs_id, class, <span class="fu">everything</span>())</span></code></pre></div>
-<PRE class="fansi fansi-output"><CODE>## <span style="color: #555555;"># A tibble: 3 x 32</span>
-##   obs_id    class feature1 feature2 feature3 feature4 feature5 feature6 feature7
-##   <span style="color: #555555; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #555555; font-style: italic;">&lt;fct&gt;</span>    <span style="color: #555555; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #555555; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #555555; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #555555; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #555555; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #555555; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #555555; font-style: italic;">&lt;dbl&gt;</span>
-## <span style="color: #555555;">1</span> S001C001~ 1        -<span style="color: #BB0000;">1.81</span>    -<span style="color: #BB0000;">5.71</span>    -<span style="color: #BB0000;">6.23</span>    -<span style="color: #BB0000;">3.73</span>    0.360    1.67    -<span style="color: #BB0000;">0.654</span>
-## <span style="color: #555555;">2</span> S001C001~ 2        -<span style="color: #BB0000;">1.77</span>    -<span style="color: #BB0000;">3.21</span>    -<span style="color: #BB0000;">8.55</span>    -<span style="color: #BB0000;">6.02</span>    0.235    0.472   -<span style="color: #BB0000;">1.11</span> 
-## <span style="color: #555555;">3</span> S001C001~ 3        -<span style="color: #BB0000;">1.86</span>    -<span style="color: #BB0000;">8.75</span>    -<span style="color: #BB0000;">2.94</span>     3.70    0.539   -<span style="color: #BB0000;">0.679</span>   -<span style="color: #BB0000;">1.20</span> 
-## <span style="color: #555555;"># ... with 23 more variables: feature8 &lt;dbl&gt;, feature9 &lt;dbl&gt;, feature10 &lt;dbl&gt;,</span>
-## <span style="color: #555555;">#   feature11 &lt;dbl&gt;, feature12 &lt;dbl&gt;, feature13 &lt;dbl&gt;, feature14 &lt;dbl&gt;,</span>
-## <span style="color: #555555;">#   feature15 &lt;dbl&gt;, feature16 &lt;dbl&gt;, feature17 &lt;dbl&gt;, feature18 &lt;dbl&gt;,</span>
-## <span style="color: #555555;">#   feature19 &lt;dbl&gt;, feature20 &lt;dbl&gt;, feature21 &lt;dbl&gt;, feature22 &lt;dbl&gt;,</span>
-## <span style="color: #555555;">#   feature23 &lt;dbl&gt;, feature24 &lt;dbl&gt;, feature25 &lt;dbl&gt;, feature26 &lt;dbl&gt;,</span>
-## <span style="color: #555555;">#   feature27 &lt;dbl&gt;, feature28 &lt;dbl&gt;, feature29 &lt;dbl&gt;, feature30 &lt;dbl&gt;</span>
+<div id="random-forest-using-default-parameters" class="section level1">
+<h1>Random forest (using default parameters)</h1>
+<div id="model-setup" class="section level2">
+<h2>Model setup</h2>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>rf_spec <span class="ot">&lt;-</span> <span class="fu">rand_forest</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">&quot;ranger&quot;</span>, <span class="at">num.threads=</span>mt<span class="sc">/</span><span class="dv">2</span>, <span class="at">seed=</span><span class="dv">20</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">&quot;classification&quot;</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>rf_rec <span class="ot">&lt;-</span> <span class="fu">recipe</span>(class <span class="sc">~</span> ., <span class="at">data=</span>skl_action_train) <span class="sc">%&gt;%</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">update_role</span>(obs_id, <span class="at">new_role=</span><span class="st">&quot;id&quot;</span>)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>rf_wf <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(rf_rec) <span class="sc">%&gt;%</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(rf_spec)</span></code></pre></div>
+</div>
+<div id="fit-model" class="section level2">
+<h2>Fit model</h2>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>rf_res <span class="ot">&lt;-</span> <span class="fu">fit_resamples</span>(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  rf_wf,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">resamples =</span> skl_action_one_fold,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">control =</span> stacks<span class="sc">::</span><span class="fu">control_stack_resamples</span>()</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">qsave</span>(rf_res, <span class="st">&quot;./data/rf_res_base.qs&quot;</span>, <span class="at">nthreads=</span>mt)</span></code></pre></div>
+</div>
+</div>
+<div id="multinomial-regression" class="section level1">
+<h1>Multinomial regression</h1>
+<div id="model-setup-1" class="section level2">
+<h2>Model setup</h2>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>mr_spec <span class="ot">&lt;-</span> <span class="fu">multinom_reg</span>(<span class="at">penalty =</span> <span class="dv">0</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">&quot;nnet&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">&quot;classification&quot;</span>)</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>mr_rec <span class="ot">&lt;-</span> <span class="fu">recipe</span>(class <span class="sc">~</span> ., <span class="at">data=</span>skl_action_train) <span class="sc">%&gt;%</span></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">update_role</span>(obs_id, <span class="at">new_role=</span><span class="st">&quot;id&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_normalize</span>(<span class="fu">all_numeric_predictors</span>())</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>mr_wf <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(mr_rec) <span class="sc">%&gt;%</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(mr_spec)</span></code></pre></div>
+</div>
+<div id="fit-model-1" class="section level2">
+<h2>Fit model</h2>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>mr_res <span class="ot">&lt;-</span> <span class="fu">fit_resamples</span>(</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  mr_wf,</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">resamples =</span> skl_action_one_fold,</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">control =</span> stacks<span class="sc">::</span><span class="fu">control_stack_resamples</span>()</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">qsave</span>(mr_res, <span class="st">&quot;./data/mr_res_base.qs&quot;</span>, <span class="at">nthreads=</span>mt)</span></code></pre></div>
+</div>
+</div>
+<div id="knn-using-default-parameters" class="section level1">
+<h1>kNN (using default parameters)</h1>
+<div id="model-setup-2" class="section level2">
+<h2>Model setup</h2>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>knn_spec <span class="ot">&lt;-</span> <span class="fu">nearest_neighbor</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">&quot;kknn&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">&quot;classification&quot;</span>)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>knn_rec <span class="ot">&lt;-</span> <span class="fu">recipe</span>(class <span class="sc">~</span> ., <span class="at">data=</span>skl_action_train) <span class="sc">%&gt;%</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">update_role</span>(obs_id, <span class="at">new_role=</span><span class="st">&quot;id&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_normalize</span>(<span class="fu">all_numeric_predictors</span>())</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>knn_wf <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(knn_rec) <span class="sc">%&gt;%</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(knn_spec)</span></code></pre></div>
+</div>
+<div id="fit-model-2" class="section level2">
+<h2>Fit model</h2>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>knn_res <span class="ot">&lt;-</span> <span class="fu">fit_resamples</span>(</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  knn_wf,</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">resamples =</span> skl_action_one_fold,</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">control =</span> stacks<span class="sc">::</span><span class="fu">control_stack_resamples</span>()</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">qsave</span>(knn_res, <span class="st">&quot;./data/knn_res_base.qs&quot;</span>, <span class="at">nthreads=</span>mt)</span></code></pre></div>
+</div>
+</div>
+<div id="svm-using-default-parameters" class="section level1">
+<h1>SVM (using default parameters)</h1>
+<div id="model-setup-3" class="section level2">
+<h2>Model setup</h2>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>svm_spec <span class="ot">&lt;-</span> <span class="fu">svm_rbf</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_engine</span>(<span class="st">&quot;kernlab&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">set_mode</span>(<span class="st">&quot;classification&quot;</span>)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>svm_rec <span class="ot">&lt;-</span> <span class="fu">recipe</span>(class <span class="sc">~</span> ., <span class="at">data=</span>skl_action_train) <span class="sc">%&gt;%</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">update_role</span>(obs_id, <span class="at">new_role=</span><span class="st">&quot;id&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">step_normalize</span>(<span class="fu">all_numeric_predictors</span>())</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>svm_wf <span class="ot">&lt;-</span> <span class="fu">workflow</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_recipe</span>(svm_rec) <span class="sc">%&gt;%</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_model</span>(svm_spec)</span></code></pre></div>
+</div>
+<div id="fit-model-3" class="section level2">
+<h2>Fit model</h2>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>svm_res <span class="ot">&lt;-</span> <span class="fu">fit_resamples</span>(</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  svm_wf,</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">resamples =</span> skl_action_one_fold,</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">control =</span> stacks<span class="sc">::</span><span class="fu">control_stack_resamples</span>()</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">qsave</span>(svm_res, <span class="st">&quot;./data/svm_res_base.qs&quot;</span>, <span class="at">nthreads=</span>mt)</span></code></pre></div>
+</div>
+</div>
+<div id="stacking" class="section level1">
+<h1>Stacking</h1>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidymodels)</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(stacks)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(qs)</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>mt <span class="ot">&lt;-</span> parallel<span class="sc">::</span><span class="fu">detectCores</span>()<span class="sc">/</span><span class="dv">2</span></span></code></pre></div>
+<div id="create-stack-data" class="section level2">
+<h2>Create stack data</h2>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>rf_res <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="st">&quot;./data/rf_res_base.qs&quot;</span>, <span class="at">nthreads=</span>mt)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>mr_res <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="st">&quot;./data/mr_res_base.qs&quot;</span>, <span class="at">nthreads=</span>mt)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>knn_res <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="st">&quot;./data/knn_res_base.qs&quot;</span>, <span class="at">nthreads=</span>mt)</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>svm_res <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="st">&quot;./data/svm_res_base.qs&quot;</span>, <span class="at">nthreads=</span>mt)</span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">stacks</span>() <span class="sc">%&gt;%</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_candidates</span>(rf_res) <span class="sc">%&gt;%</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_candidates</span>(mr_res) <span class="sc">%&gt;%</span></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_candidates</span>(knn_res) <span class="sc">%&gt;%</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">add_candidates</span>(svm_res) <span class="sc">%&gt;%</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">qsave</span>(<span class="st">&quot;./data/skl_action_stack.qs&quot;</span>, <span class="at">nthreads=</span>mt)</span></code></pre></div>
+</div>
+<div id="blending" class="section level2">
+<h2>Blending</h2>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>skl_action_stack <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="st">&quot;./data/skl_action_stack.qs&quot;</span>, <span class="at">nthreads=</span>mt)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>skl_action_blend <span class="ot">&lt;-</span> skl_action_stack <span class="sc">%&gt;%</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">blend_predictions</span>()</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>skl_action_blend</span></code></pre></div>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">qsave</span>(skl_action_blend, <span class="st">&quot;./data/skl_action_blend.qs&quot;</span>, <span class="at">nthreads=</span>mt)</span></code></pre></div>
+</div>
+<div id="final-fit" class="section level2">
+<h2>Final fit</h2>
+<div class="sourceCode" id="cb20"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>skl_action_blend_fit <span class="ot">&lt;-</span> skl_action_blend <span class="sc">%&gt;%</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">fit_members</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">qsave</span>(skl_action_blend_fit, <span class="st">&quot;./data/skl_action_blend_fit.qs&quot;</span>, <span class="at">nthreads=</span>mt)</span></code></pre></div>
+</div>
+<div id="predictions-on-test-data" class="section level2">
+<h2>Predictions on test data</h2>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>skl_action_blend_fit <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="st">&quot;./data/skl_action_blend_fit.qs&quot;</span>, <span class="at">nthreads=</span>mt)</span></code></pre></div>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>skl_action_test <span class="ot">&lt;-</span> <span class="fu">qread</span>(<span class="st">&quot;./data/skl_action_test.qs&quot;</span>, <span class="at">nthreads=</span>mt)</span></code></pre></div>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>final_results <span class="ot">&lt;-</span> <span class="fu">bind_cols</span>(</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">predict</span>(skl_action_blend_fit, skl_action_test, <span class="at">type=</span><span class="st">&quot;class&quot;</span>),</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>  skl_action_test</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>classification_metrics <span class="ot">&lt;-</span> <span class="fu">metric_set</span>(</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>  accuracy,</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>  f_meas,</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>  recall,</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>  precision</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>final_results <span class="sc">%&gt;%</span></span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">classification_metrics</span>(<span class="at">truth=</span>class, <span class="at">estimate=</span>.pred_class)</span></code></pre></div>
+<PRE class="fansi fansi-output"><CODE>## <span style="color: #555555;"># A tibble: 4 x 3</span>
+##   .metric   .estimator .estimate
+##   <span style="color: #555555; font-style: italic;">&lt;chr&gt;</span>     <span style="color: #555555; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #555555; font-style: italic;">&lt;dbl&gt;</span>
+## <span style="color: #555555;">1</span> accuracy  multiclass     0.667
+## <span style="color: #555555;">2</span> f_meas    macro          0.658
+## <span style="color: #555555;">3</span> recall    macro          0.661
+## <span style="color: #555555;">4</span> precision macro          0.659
 </CODE></PRE>
 </div>
-</div>
-<div id="apply-to-main-data" class="section level1">
-<h1>Apply to main data</h1>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>skl_action <span class="ot">&lt;-</span> skl_features <span class="sc">%&gt;%</span></span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list_to_tibble</span>(<span class="at">.id =</span> <span class="st">&quot;obs_id&quot;</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">class =</span> <span class="fu">str_extract</span>(obs_id, <span class="st">&quot;.{3}$&quot;</span>),</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">class =</span> <span class="fu">as.integer</span>(class),</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">class =</span> <span class="fu">as_factor</span>(class)</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(obs_id, class, <span class="fu">everything</span>())</span></code></pre></div>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">qsave</span>(skl_action, <span class="st">&quot;./data/skl_action.qs&quot;</span>, <span class="at">nthreads=</span>mt)</span></code></pre></div>
 </div>
 
 
