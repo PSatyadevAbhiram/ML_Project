@@ -1,0 +1,246 @@
+---
+title: "Stacking demo"
+output:
+  html_document:
+    theme: cosmo
+    highlight: "../adam_one_light.theme"
+---
+
+```{r, include=FALSE}
+# Note: knit directory should be set to project directory
+knitr::opts_chunk$set(eval=FALSE, message=FALSE, warning=FALSE)
+
+old_hooks <- fansi::set_knit_hooks(
+  knitr::knit_hooks,
+  which = c("output", "message", "warning", "error")
+)
+
+options(crayon.enabled=TRUE)
+```
+
+# Packages
+
+```{r}
+library(tidyverse)
+library(tidymodels)
+library(stacks)
+library(qs)
+
+mt <- parallel::detectCores()/2
+```
+
+# Main data
+
+```{r}
+skl_action_one_fold <- qread("./data/skl_action_one_fold.qs", nthreads=mt)
+skl_action_train <- qread("./data/skl_action_train.qs", nthreads=mt)
+```
+
+# Random forest (using default parameters)
+
+## Model setup
+
+```{r}
+rf_spec <- rand_forest() %>%
+  set_engine("ranger", num.threads=mt/2, seed=20) %>%
+  set_mode("classification")
+
+rf_rec <- recipe(class ~ ., data=skl_action_train) %>%
+  update_role(obs_id, new_role="id")
+
+rf_wf <- workflow() %>%
+  add_recipe(rf_rec) %>%
+  add_model(rf_spec)
+```
+
+## Fit model
+
+```{r}
+rf_res <- fit_resamples(
+  rf_wf,
+  resamples = skl_action_one_fold,
+  control = stacks::control_stack_resamples()
+)
+```
+
+```{r}
+qsave(rf_res, "./data/rf_res_base.qs", nthreads=mt)
+```
+
+# Multinomial regression
+
+## Model setup
+
+```{r}
+mr_spec <- multinom_reg(penalty = 0) %>%
+  set_engine("nnet") %>%
+  set_mode("classification")
+
+mr_rec <- recipe(class ~ ., data=skl_action_train) %>%
+  update_role(obs_id, new_role="id") %>%
+  step_normalize(all_numeric_predictors())
+
+mr_wf <- workflow() %>%
+  add_recipe(mr_rec) %>%
+  add_model(mr_spec)
+```
+
+## Fit model
+
+```{r}
+mr_res <- fit_resamples(
+  mr_wf,
+  resamples = skl_action_one_fold,
+  control = stacks::control_stack_resamples()
+)
+```
+
+```{r}
+qsave(mr_res, "./data/mr_res_base.qs", nthreads=mt)
+```
+
+# kNN (using default parameters)
+
+## Model setup
+
+```{r}
+knn_spec <- nearest_neighbor() %>%
+  set_engine("kknn") %>%
+  set_mode("classification")
+
+knn_rec <- recipe(class ~ ., data=skl_action_train) %>%
+  update_role(obs_id, new_role="id") %>%
+  step_normalize(all_numeric_predictors())
+  
+knn_wf <- workflow() %>%
+  add_recipe(knn_rec) %>%
+  add_model(knn_spec)
+```
+
+## Fit model
+
+```{r}
+knn_res <- fit_resamples(
+  knn_wf,
+  resamples = skl_action_one_fold,
+  control = stacks::control_stack_resamples()
+)
+```
+
+```{r}
+qsave(knn_res, "./data/knn_res_base.qs", nthreads=mt)
+```
+
+# SVM (using default parameters)
+
+## Model setup
+
+```{r}
+svm_spec <- svm_rbf() %>%
+  set_engine("kernlab") %>%
+  set_mode("classification")
+
+svm_rec <- recipe(class ~ ., data=skl_action_train) %>%
+  update_role(obs_id, new_role="id") %>%
+  step_normalize(all_numeric_predictors())
+
+svm_wf <- workflow() %>%
+  add_recipe(svm_rec) %>%
+  add_model(svm_spec)
+```
+
+## Fit model
+
+```{r}
+svm_res <- fit_resamples(
+  svm_wf,
+  resamples = skl_action_one_fold,
+  control = stacks::control_stack_resamples()
+)
+```
+
+```{r}
+qsave(svm_res, "./data/svm_res_base.qs", nthreads=mt)
+```
+
+# Stacking
+
+```{r, eval=TRUE}
+library(tidyverse)
+library(tidymodels)
+library(stacks)
+library(qs)
+
+mt <- parallel::detectCores()/2
+```
+
+## Create stack data
+
+```{r}
+rf_res <- qread("./data/rf_res_base.qs", nthreads=mt)
+mr_res <- qread("./data/mr_res_base.qs", nthreads=mt)
+knn_res <- qread("./data/knn_res_base.qs", nthreads=mt)
+svm_res <- qread("./data/svm_res_base.qs", nthreads=mt)
+```
+
+```{r}
+stacks() %>%
+  add_candidates(rf_res) %>%
+  add_candidates(mr_res) %>%
+  add_candidates(knn_res) %>%
+  add_candidates(svm_res) %>%
+  qsave("./data/skl_action_stack.qs", nthreads=mt)
+```
+
+## Blending
+
+```{r}
+skl_action_stack <- qread("./data/skl_action_stack.qs", nthreads=mt)
+
+skl_action_blend <- skl_action_stack %>%
+  blend_predictions()
+
+skl_action_blend
+```
+
+```{r}
+qsave(skl_action_blend, "./data/skl_action_blend.qs", nthreads=mt)
+```
+
+## Final fit
+
+```{r}
+skl_action_blend_fit <- skl_action_blend %>%
+  fit_members()
+```
+
+```{r}
+qsave(skl_action_blend_fit, "./data/skl_action_blend_fit.qs", nthreads=mt)
+```
+
+## Predictions on test data
+
+```{r, eval=TRUE}
+skl_action_blend_fit <- qread("./data/skl_action_blend_fit.qs", nthreads=mt)
+```
+
+```{r, eval=TRUE}
+skl_action_test <- qread("./data/skl_action_test.qs", nthreads=mt)
+```
+
+```{r, eval=TRUE}
+final_results <- bind_cols(
+  predict(skl_action_blend_fit, skl_action_test, type="class"),
+  skl_action_test
+)
+
+classification_metrics <- metric_set(
+  accuracy,
+  f_meas,
+  recall,
+  precision
+)
+
+final_results %>%
+  classification_metrics(truth=class, estimate=.pred_class)
+```
